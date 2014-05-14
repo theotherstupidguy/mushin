@@ -1,1 +1,1 @@
-require './mushin/base'
+require 'mushin/base'

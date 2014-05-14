@@ -3,29 +3,10 @@ require_relative './middleware/runner'
 
 module Mushin 
   module DSL
-    #Usage: 
-    # module GameOn
-    #  module Book
-    #    include Mushin::DSL::Notebook 
-    #    def mybook
-    #      p 'book works' 
-    #    end
-    #  end
-    # end
-    #
-    # module MyDomainBook
-    #  extend GameOn::Book
-    #  mybook
-    #  mynotebook
-    # end
     module Notebook
       def self.extended(mod)
 	puts "#{self} extended in #{mod}"
-	#puts "#{self} included in #{mod}"
 	self.send(:include, mod)
-	#mod.send(:extend, self)
-	#TODO Inject somthing useful logging,exceptions, etc.
-	#prepend mod
       end
 
       def self.find activity_construct, activity_rule
@@ -47,7 +28,7 @@ module Mushin
 
     class Activities
       def self.on domain_context, &block 
-	#p construct
+
 	@@domain_context = domain_context 
 	@@activities = []
 
@@ -58,10 +39,7 @@ module Mushin
 	yield Activities.new
 
 	@@activities.each do |activity| 
-	  p @@domain_context
-	  #p self
 	  self.construction @@domain_context, activity
-	  #Mushin::Engine.run @@construct, activity
 	end 
       end
 
@@ -115,11 +93,9 @@ module Mushin
 	end
       end
       @@setup_middlewares.each do |setup_middleware|
-	#@@stack.insert_before 1, setup_middleware #TODO should be one? 
 	@@stack.insert_before 0, setup_middleware 
       end
       @@stack.call
-      #p @@stack.methods
     end
   end
 end
