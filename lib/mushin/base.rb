@@ -51,11 +51,6 @@ module Mushin
 	    end
 	  end
 	end
-
-	@@middlewares.each do |middleware|
-	  p "use #{middleware.name}, #{middleware.opts}, #{middleware.params}"
-	  #use middleware.name, middleware.opts, middleware.params
-	end
 	@@middlewares
       end
 
@@ -89,38 +84,6 @@ module Mushin
 	alias_method context_construct, :context 
       end
     end
-
-=begin
-    class Activities
-      def self.on domain_context, &block 
-
-	@@domain_context = domain_context 
-	@@activities = []
-
-	def add activity=[] 
-	  @@activities += [activity] 
-	end
-
-	yield Activities.new
-
-	def self.construction game, activity   
-	  Mushin::Engine.run game, activity   
-	end
-
-	@@activities.each do |activity| 
-	  self.construction @@domain_context, activity
-	end 
-      end
-
-      def self.domain_context
-	@@domain_context
-      end
-
-      def self.all
-	@@activities
-      end
-    end
-=end
   end
 
   class Env
@@ -129,10 +92,13 @@ module Mushin
     end
 
     def Env.register &block
-      #instance_eval &block
       class_eval &block
     end
 
+    #def Env.persistence ds
+    #  @@ds = [Object.const_get(ds)]
+    #end
+    @@ds = ''
     def Env.activate id, &block 
       @id = id
       def self.on domain_context, &block
@@ -143,26 +109,13 @@ module Mushin
 	end
 	instance_eval(&block)
       end
-      #yield Env.new 
       instance_eval(&block)
+      Mushin::Engine.setup [Object.const_get(@@ds)]
       @@activities.each do |activity| 
-	p activity
-	#self.construction @@domain_context, activity      
-	Mushin::Engine.setup [GameOn::Persistence::DS]
+	#Mushin::Engine.setup [GameOn::Persistence::DS]
 	Mushin::Engine.run @@domain_context, activity   
       end
     end
-
-=begin
-	def self.construction game, activity   
-	  Mushin::Engine.run game, activity   
-	end
-
-	@@activities.each do |activity| 
-	  self.construction @@domain_context, activity
-	end 
-=end
-
   end
 
   module Engine
@@ -171,7 +124,6 @@ module Mushin
     end
 
     def Engine.run domain_context, activity
-      p 'Mushin::Engine is running'
       @@domain_context = domain_context
       @@activity = activity
 
