@@ -87,6 +87,7 @@ module Mushin
   end
 
   class Env
+    @@ds = ''
     class << self
       attr_accessor :id
     end
@@ -95,10 +96,6 @@ module Mushin
       class_eval &block
     end
 
-    #def Env.persistence ds
-    #  @@ds = [Object.const_get(ds)]
-    #end
-    @@ds = ''
     def Env.activate id, &block 
       @id = id
       def self.on domain_context, &block
@@ -112,7 +109,6 @@ module Mushin
       instance_eval(&block)
       Mushin::Engine.setup [Object.const_get(@@ds)]
       @@activities.each do |activity| 
-	#Mushin::Engine.setup [GameOn::Persistence::DS]
 	Mushin::Engine.run @@domain_context, activity   
       end
     end
@@ -129,7 +125,6 @@ module Mushin
 
       @@middlewares = Mushin::DSL::Notebook.find @@domain_context, @@activity 
       @@stack = Middleware::Builder.new do
-	#use GameOn::Persistence::DS
 	@@middlewares.each do |middleware|
 	  #p "use #{middleware.name}, #{middleware.opts}, #{middleware.params}"
 	  use middleware.name, middleware.opts, middleware.params
