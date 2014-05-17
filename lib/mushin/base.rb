@@ -36,9 +36,6 @@ module Mushin
 	puts "#{self} extended in #{mod}"
 	#self.send(:include, mod)
 	mod.send(:include, self)
-	def mod.method_added(method_name)
-	  puts "Adding #{method_name.inspect}"
-	end
       end
 
       def self.find activity_context, activity_statment
@@ -93,7 +90,7 @@ module Mushin
       end
     end
 
-
+=begin
     class Activities
       def self.on domain_context, &block 
 
@@ -105,6 +102,10 @@ module Mushin
 	end
 
 	yield Activities.new
+
+	def self.construction game, activity   
+	  Mushin::Engine.run game, activity   
+	end
 
 	@@activities.each do |activity| 
 	  self.construction @@domain_context, activity
@@ -118,11 +119,8 @@ module Mushin
       def self.all
 	@@activities
       end
-
-      def self.count
-	@@activities.count 
-      end
     end
+=end
   end
 
   class Env
@@ -135,10 +133,36 @@ module Mushin
       class_eval &block
     end
 
-    def Env.activate id, &block
+    def Env.activate id, &block 
       @id = id
-      yield
+      def self.on domain_context, &block
+	@@domain_context = domain_context 
+	@@activities = []  
+	def self.activity statment 
+	  @@activities += [statment]                                                                          
+	end
+	instance_eval(&block)
+      end
+      #yield Env.new 
+      instance_eval(&block)
+      @@activities.each do |activity| 
+	p activity
+	#self.construction @@domain_context, activity      
+	Mushin::Engine.setup [GameOn::Persistence::DS]
+	Mushin::Engine.run @@domain_context, activity   
+      end
     end
+
+=begin
+	def self.construction game, activity   
+	  Mushin::Engine.run game, activity   
+	end
+
+	@@activities.each do |activity| 
+	  self.construction @@domain_context, activity
+	end 
+=end
+
   end
 
   module Engine
