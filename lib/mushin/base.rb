@@ -7,6 +7,34 @@ module Mushin
     exceptions.each { |e| const_set(e, Class.new(StandardError)) }  
   end
 
+  module Customization 
+    class << self
+      #attr_accessor :opts, :params
+      def opts
+	@opts ||= {}
+      end
+      def params
+	@params ||= {}
+      end
+    end
+    module Opts
+      def self.[] key 
+	Mushin::Customization.opts[key] 
+      end
+      def self.[]= key, value
+	Mushin::Customization.opts.merge! Hash[key, value]
+      end
+    end
+    module Params
+      def self.[] key 
+	Mushin::Customization.params[key] 
+      end
+      def self.[]= key, value
+	Mushin::Customization.params.merge! Hash[key, value]
+      end
+    end
+  end
+  
   module DSL
     class Context
       attr_accessor :title, :statments
@@ -88,15 +116,20 @@ module Mushin
 
   class Env
     @@ds = ''
-    class << self
-      attr_accessor :id
-    end
+    #class << self
+    #  attr_accessor :id
+    #end
 
     def Env.register &block
       class_eval &block
     end
 
-    def Env.activate id, &block 
+    def Env.params &block
+      #attr_accessor :opts, :params
+      #instance_eval &block
+    end
+
+    def Env.set id, &block 
       @id = id
       def self.on domain_context, &block
 	@@domain_context = domain_context 
@@ -104,9 +137,13 @@ module Mushin
 	def self.activity statment 
 	  @@activities += [statment]                                                                          
 	end
-	instance_eval(&block)
+	#instance_eval(&block)
+	class_eval(&block)
       end
-      instance_eval(&block)
+      #instance_eval(&block)
+      class_eval(&block)
+      #end
+      #def Env.live
       Mushin::Engine.setup [Object.const_get(@@ds)]
       @@activities.each do |activity| 
 	Mushin::Engine.run @@domain_context, activity   
