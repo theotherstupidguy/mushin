@@ -9,12 +9,15 @@ module Mushin
 
   module Customization 
     class << self
-      #attr_accessor :opts, :params
       def opts
-	@opts ||= {}
+	instance_eval do 
+	  @opts ||= {}
+	end
       end
       def params
-	@params ||= {}
+	instance_eval do 
+	  @params ||= {}
+	end
       end
     end
     module Opts
@@ -34,7 +37,7 @@ module Mushin
       end
     end
   end
-  
+
   module DSL
     class Context
       attr_accessor :title, :statments
@@ -66,6 +69,38 @@ module Mushin
 	mod.send(:include, self)
       end
 
+      def self.build context_construct, statment_construct, activation_construct
+	@@statment_construct = statment_construct
+	@@activation_construct = activation_construct
+	@@contexts = []
+	def context title, &block
+	  @context = Mushin::DSL::Context.new title
+	  def statment statment=[], &block
+	    @statment = Mushin::DSL::Statment.new statment 
+
+	    def activation name, opts={}, params={}
+	      @activation = Mushin::DSL::Activation.new name, opts, params
+	      @statment.activations << @activation 
+	    end
+	    #Mushin::DSL::Notebook.class_eval do 
+	    Mushin::DSL::Notebook.instance_eval do 
+	      alias_method @@activation_construct, :activation 
+	    end
+	    yield
+	    @context.statments << @statment
+	    @statment = nil 
+	  end
+	  #Mushin::DSL::Notebook.class_eval do 
+	  Mushin::DSL::Notebook.instance_eval do 
+	    alias_method @@statment_construct, :statment 
+	  end
+	  yield
+	  @@contexts << @context
+	  @context = nil 
+	end
+	alias_method context_construct, :context 
+      end
+
       def self.find activity_context, activity_statment
 	@@middlewares = []
 	@@contexts.each do |current_context|
@@ -81,54 +116,25 @@ module Mushin
 	end
 	@@middlewares
       end
-
-      def self.build context_construct, statment_construct, activation_construct
-	@@statment_construct = statment_construct
-	@@activation_construct = activation_construct
-	@@contexts = []
-	def context title, &block
-	  @context = Mushin::DSL::Context.new title
-	  def statment statment=[], &block
-	    @statment = Mushin::DSL::Statment.new statment 
-
-	    def activation name, opts={}, params={}
-	      @activation = Mushin::DSL::Activation.new name, opts, params
-	      @statment.activations << @activation 
-	    end
-	    Mushin::DSL::Notebook.class_eval do 
-	      alias_method @@activation_construct, :activation 
-	    end
-	    yield
-	    @context.statments << @statment
-	    @statment = nil 
-	  end
-	  Mushin::DSL::Notebook.class_eval do 
-	    alias_method @@statment_construct, :statment 
-	  end
-	  yield
-	  @@contexts << @context
-	  @context = nil 
-	end
-	alias_method context_construct, :context 
-      end
     end
   end
 
   class Env
     @@ds = ''
-    #class << self
-    #  attr_accessor :id
-    #end
 
     def Env.register &block
       class_eval &block
     end
 
-    def Env.params &block
-      #attr_accessor :opts, :params
-      #instance_eval &block
-    end
+    #def Env.params &block
+    #attr_accessor :opts, :params
+    #instance_eval &block
+    #end
 
+    #def Env.set id, &block 
+    #  raise "Framework didn't implement Env.set" 
+    #end
+    @@domain_folder = ""
     def Env.set id, &block 
       @id = id
       def self.on domain_context, &block
@@ -137,17 +143,20 @@ module Mushin
 	def self.activity statment 
 	  @@activities += [statment]                                                                          
 	end
-	#instance_eval(&block)
 	class_eval(&block)
       end
-      #instance_eval(&block)
       class_eval(&block)
-      #end
-      #def Env.live
+
+      Dir["./#{@@domain_folder}/*"].each {|file| load file }  
+
       Mushin::Engine.setup [Object.const_get(@@ds)]
       @@activities.each do |activity| 
 	Mushin::Engine.run @@domain_context, activity   
       end
+    end
+
+    def Env.get id
+      raise "Framework didn't implement Env.get" 
     end
   end
 
