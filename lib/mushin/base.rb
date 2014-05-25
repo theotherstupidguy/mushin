@@ -69,6 +69,59 @@ module Mushin
 	mod.send(:include, self)
       end
 
+      @@contexts = []
+      def context title, &block
+	@context = Mushin::DSL::Context.new title 
+	def statment statment=[], &block
+	  @statment = Mushin::DSL::Statment.new statment 
+	  def activation name, opts={}, params={}
+	    @activation = Mushin::DSL::Activation.new name, opts, params
+	    @statment.activations << @activation 
+	  end
+	  yield
+	  @context.statments << @statment
+	end
+	yield
+	@@contexts << @context
+      end
+
+=begin
+      attr_accessor :statment_construct, :activation_construct
+      def self.build context_construct, statment_construct, activation_construct
+	@statment_construct = statment_construct
+	@activation_construct = activation_construct
+	@@contexts = []
+	def context title, &block
+	  @context = Mushin::DSL::Context.new title
+	  def statment statment=[], &block
+	    @statment = Mushin::DSL::Statment.new statment 
+
+	    def activation name, opts={}, params={}
+	      @activation = Mushin::DSL::Activation.new name, opts, params
+	      @statment.activations << @activation 
+	    end
+	    #Mushin::DSL::Notebook.class_eval do 
+	    Mushin::DSL::Notebook.instance_eval do 
+	    alias_method @activation_construct, :activation 
+	    #p activation_construct 
+	    #alias activation_construct :activation
+	    end
+	    yield
+	    @context.statments << @statment
+	    @statment = nil 
+	  end
+	  #Mushin::DSL::Notebook.class_eval do 
+	  Mushin::DSL::Notebook.instance_eval do 
+	    alias_method @statment_construct, :statment 
+	  end
+	  yield
+	  @@contexts << @context
+	  @context = nil 
+	end
+	alias_method context_construct, :context 
+	#alias context_construct :context 
+      end
+
       def self.build context_construct, statment_construct, activation_construct
 	@@statment_construct = statment_construct
 	@@activation_construct = activation_construct
@@ -100,7 +153,7 @@ module Mushin
 	end
 	alias_method context_construct, :context 
       end
-
+=end
       def self.find activity_context, activity_statment
 	@@middlewares = []
 	@@contexts.each do |current_context|
@@ -124,6 +177,7 @@ module Mushin
 
     def Env.register &block
       class_eval &block
+      #instance_eval &block
     end
 
     #def Env.params &block
