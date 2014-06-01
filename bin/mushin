@@ -1,28 +1,29 @@
 #!/usr/bin/env ruby
+require 'find'
 require 'fileutils'
 require 'optparse'
 
 subtext = <<HELP
-                       _     _       
-   _ __ ___  _   _ ___| |__ (_)_ __  
-  | '_ ` _ \\| | | / __| '_ \\| | '_ \\ 
-  | | | | | | |_| \\__ \\ | | | | | | |
-  |_| |_| |_|\\__,_|___/_| |_|_|_| |_|
-                                    
+                      _     _       
+  _ __ ___  _   _ ___| |__ (_)_ __  
+ | '_ ` _ \\| | | / __| '_ \\| | '_ \\ 
+ | | | | | | |_| \\__ \\ | | | | | | |
+ |_| |_| |_|\\__,_|___/_| |_|_|_| |_|
 
 
 
  Usage: mushin [command] [options]
 
-
  Commonly used command are:
-   config :     generats mushin config.rb i.e. rubygems & github authentications
-   roll   :     roll your own framework 
+   setup  :    generats mushin setup.rb i.e. rubygems & github authentications
+   roll   :    roll your own framework 
+   share  :    share your framework on rubygems.org 
+   clean  :    clean out generated 0.0.0.pre1 gems
 
 HELP
 
 global = OptionParser.new do |opts|
-  opts.banner = "In the beginner's mind there are many possibilities, in the expert's mind there are few!"
+  opts.banner = " 'In the beginner's mind there are many possibilities, in the expert's mind there are few!' "
   opts.separator ""
   opts.separator subtext
 end
@@ -30,6 +31,23 @@ global.order!
 command = ARGV.shift
 
 case command 
+
+when "setup"
+  p "generating mushin's setup.rb " 
+  @framework = ARGV[0] 
+  df = File.new("setup.rb", "w") 
+  df.puts("Mushin[:framework] = '#{@framework}'")
+  df.puts("Mushin[:author] = ''")
+  df.puts("Mushin[:email] = ''")
+  df.puts("Mushin[:license] = ''")
+  df.puts("Mushin[:desc] = ''")
+  df.puts("Mushin[:website] = ''")
+
+  df.puts("Mushin[:ds_summary] = ''")
+  df.puts("Mushin[:ds_desc] = ''")
+
+  df.close
+
 when "roll"
   module Mushin
     class << self
@@ -43,12 +61,11 @@ when "roll"
       end
     end
   end
-  require_relative './config'
+  require "#{Dir.pwd}/setup"
 
-  #@framework = Mushin[:framework] 
-  @framework = ARGV[0] 
+  @framework = Mushin[:framework] 
   p "Framework: #{@framework}"
-  @author = 'baddude'
+  @author = Mushin[:author] 
 
   # Framework Gem
   if File.directory?("#{@framework.downcase}")
@@ -200,18 +217,18 @@ module #{@framework}
 
 	#{@framework}::Engine.setup [Object.const_get('#{@framework}::Persistence::DS')]
 	@activities.each do |activity| 
-	#{@framework}::Engine.run @domain_context, activity   
+	  #{@framework}::Engine.run @domain_context, activity   
 	end
 	return #{@framework}::Persistence::DS.load @id 
-      end
+end
     end
   end
 end
-	eos
-	df.close
+eos
+df.close
 
-	df = File.new("#{@framework.downcase}/#{@framework.downcase}.gemspec", "w") 
-	df.puts <<-eos
+df = File.new("#{@framework.downcase}/#{@framework.downcase}.gemspec", "w") 
+df.puts <<-eos
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
@@ -229,32 +246,32 @@ Gem::Specification.new do |spec|
   spec.files       =  Dir.glob("{lib}/**/*")  
   spec.require_paths = ["lib"]
 end
-	eos
-	df.close
+eos
+df.close
 
-	# Framework Peristance Gem
-	@ds = @framework.downcase + '-redis'
-	if File.directory?("#{@ds.downcase}")
-	  FileUtils.remove_dir (Dir::pwd + "/#{@ds.downcase}") 
-	end
-	Dir.mkdir(Dir::pwd + "/#{@ds.downcase}") 
-	Dir.mkdir(Dir::pwd + "/#{@ds.downcase}/lib") 
-	Dir.mkdir(Dir::pwd + "/#{@ds.downcase}/lib/#{@ds.downcase}") 
-	Dir.mkdir(Dir::pwd + "/#{@ds.downcase}/spec") 
+# Framework Peristance Gem
+@ds = @framework.downcase + '-redis'
+if File.directory?("#{@ds.downcase}")
+  FileUtils.remove_dir (Dir::pwd + "/#{@ds.downcase}") 
+end
+Dir.mkdir(Dir::pwd + "/#{@ds.downcase}") 
+Dir.mkdir(Dir::pwd + "/#{@ds.downcase}/lib") 
+Dir.mkdir(Dir::pwd + "/#{@ds.downcase}/lib/#{@ds.downcase}") 
+Dir.mkdir(Dir::pwd + "/#{@ds.downcase}/spec") 
 
-	df = File.new("#{@ds.downcase}/lib/#{@ds.downcase}.rb", "w") 
-	df.puts("require '#{@ds}/base'")
-	df.close
+df = File.new("#{@ds.downcase}/lib/#{@ds.downcase}.rb", "w") 
+df.puts("require '#{@ds}/base'")
+df.close
 
-	df = File.new("#{@ds.downcase}/lib/#{@ds.downcase}/base.rb", "w") 
-	df.puts <<-eos
+df = File.new("#{@ds.downcase}/lib/#{@ds.downcase}/base.rb", "w") 
+df.puts <<-eos
 require "redis"
 
 module #{@framework} 
   module Persistence
     class DS 
 
-	#{@framework}::Env.register do 
+#{@framework}::Env.register do 
 	attr_accessor :id
       end
 
@@ -305,11 +322,11 @@ module #{@framework}
     end
   end
 end
-	eos
-	df.close
+eos
+df.close
 
-	df = File.new("#{@ds.downcase}/#{@ds.downcase}.gemspec", "w") 
-	df.puts <<-eos
+df = File.new("#{@ds.downcase}/#{@ds.downcase}.gemspec", "w") 
+df.puts <<-eos
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
@@ -327,38 +344,31 @@ Gem::Specification.new do |spec|
   spec.files       =  Dir.glob("{lib}/**/*")  
   spec.require_paths = ["lib"]
 end
-	eos
-	df.close
+eos
+df.close
 
-when "config"
-  p "generating mushin's config.rb " 
 when "share"
   @gem = ARGV[0] 
-  require 'find'
 
   Find.find(Dir.pwd) do |path|
-    if FileTest.directory?(path)
-      if File.basename(path)[0] == ?.
-	Find.prune       # Don't look any further into this directory.
-      else
-	next
-      end
-    else
-      if (File.basename(path).include? "gemspec") && (File.basename(path).include? @gem.downcase) 
-	p  File.basename(path)
-	@path = path
-	`gem build #{@path.downcase}`
-	`gem push #{@path.downcase}`
-      end
+    if (File.extname(path) == ".gemspec") && (File.basename(path).include? @gem.downcase) 
+      @path = path
+      `gem build #{@path.downcase}`
+    end
+    if (File.extname(path) == ".gem") && (File.basename(path).include? @gem.downcase) 
+      @path = path
+      `gem push #{@path.downcase}`
     end
   end
-  #`gem push #{@ds.downcase}-0.0.0.pre1.gem`
-  #`gem build #{@ds.downcase}/#{@ds.downcase}.gemspec`
-  #`gem push #{@framework.downcase}-0.0.0.pre1.gem`
-  #`gem push #{@ds.downcase}-0.0.0.pre1.gem`
 when "clean"
-  `rm #{@framework.downcase}-0.0.0.pre1.gem`
-  `rm #{@ds.downcase}-0.0.0.pre1.gem`
+  @gem = ARGV[0] 
+
+  Find.find(Dir.pwd) do |path|
+    if (File.extname(path) == ".gem") && (File.basename(path).include? @gem.downcase) 
+      @path = path
+      `rm #{@path.downcase}`
+    end
+  end
 else
   puts "You just making it up! try mushin --help"
 end
