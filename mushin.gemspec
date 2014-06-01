@@ -4,13 +4,19 @@ $:.unshift lib unless $:.include?(lib)
 
 Gem::Specification.new do |s|
   s.name        = 'mushin'
-  s.version     = '0.0.0.pre44'
+  s.version     = '0.0.0.pre60'
   s.summary     = "a ruby experiment"
   s.description = "In the beginner’s mind there are many possibilities, in the expert’s mind there are few!"
   s.authors     = ["theotherstupidguy"]
   s.email       = 'theotherstupidguy@gmail.com'
-  #s.files       = ["lib/mushin.rb"]
-  s.files       =  Dir.glob("{lib}/**/*") 
+  s.executables = ["mushin"]
+  s.files       =  Dir.glob("{lib,bin}/**/*") 
+  #s.files       = ["lib/mushin.rb", "bin/mushin"]
   s.homepage    = 'https://github.com/mushin-rb/mushin'
   s.license     = 'MIT'
+  s.post_install_message = <<-MESSAGE
+  Mushin is kinda Awesome, please ENJOY!
+  MESSAGE
+
+
 end

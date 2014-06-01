@@ -1,0 +1,364 @@
+#!/usr/bin/env ruby
+require 'fileutils'
+require 'optparse'
+
+subtext = <<HELP
+                       _     _       
+   _ __ ___  _   _ ___| |__ (_)_ __  
+  | '_ ` _ \\| | | / __| '_ \\| | '_ \\ 
+  | | | | | | |_| \\__ \\ | | | | | | |
+  |_| |_| |_|\\__,_|___/_| |_|_|_| |_|
+                                    
+
+
+
+ Usage: mushin [command] [options]
+
+
+ Commonly used command are:
+   config :     generats mushin config.rb i.e. rubygems & github authentications
+   roll   :     roll your own framework 
+
+HELP
+
+global = OptionParser.new do |opts|
+  opts.banner = "In the beginner's mind there are many possibilities, in the expert's mind there are few!"
+  opts.separator ""
+  opts.separator subtext
+end
+global.order!
+command = ARGV.shift
+
+case command 
+when "roll"
+  module Mushin
+    class << self
+      @@configs = {}
+      def []= key, value
+	@@configs[key.to_sym] = value
+      end
+
+      def [] key
+	@@configs[key.to_sym]
+      end
+    end
+  end
+  require_relative './config'
+
+  #@framework = Mushin[:framework] 
+  @framework = ARGV[0] 
+  p "Framework: #{@framework}"
+  @author = 'baddude'
+
+  # Framework Gem
+  if File.directory?("#{@framework.downcase}")
+    FileUtils.remove_dir (Dir::pwd + "/#{@framework.downcase}") 
+  end
+
+  Dir.mkdir(Dir::pwd + "/#{@framework.downcase}") 
+  Dir.mkdir(Dir::pwd + "/#{@framework.downcase}/bin") 
+  Dir.mkdir(Dir::pwd + "/#{@framework.downcase}/lib") 
+  Dir.mkdir(Dir::pwd + "/#{@framework.downcase}/lib/#{@framework.downcase}") 
+  Dir.mkdir(Dir::pwd + "/#{@framework.downcase}/spec") 
+
+
+  df = File.new("#{@framework.downcase}/bin/#{@framework.downcase}", "w") 
+  df.puts <<-eos
+#!/usr/bin/env ruby
+
+require 'fileutils'
+@name = "Points".capitalize 
+@middleware = '#{@framework.downcase}-' + @name.downcase
+
+# Generates a #{@framework} Middleware Gem
+#
+if File.directory?(@middleware.downcase)
+  FileUtils.remove_dir (Dir::pwd + "/" + @middleware.downcase) 
+end
+Dir.mkdir(Dir::pwd + "/" + @middleware.downcase) 
+Dir.mkdir(Dir::pwd + "/" + @middleware.downcase + "/lib") 
+Dir.mkdir(Dir::pwd + "/" + @middleware.downcase + "/lib/" + @middleware.downcase) 
+
+df = File.new(@middleware.downcase + "/" + @middleware.downcase + ".gemspec", "w") 
+df.puts <<-gf
+# coding: utf-8
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+
+Gem::Specification.new do |spec|
+  spec.name          = "\#{@middleware}"
+  spec.version       = "0.0.0.pre1"
+  spec.authors       = ["#{@author}"]
+  spec.email         = ["#{@email}"]
+  spec.summary       = "#{@ds_summary}" 
+  spec.description   = "#{@ds_desc}"
+  spec.homepage      = "#{@ds_website}"
+  spec.license       = "#{@license}"
+
+  spec.files       =  Dir.glob("{lib}/**/*")  
+  spec.require_paths = ["lib"]
+end
+gf
+df.close
+df = File.new(@middleware.downcase + "/lib/" + @middleware.downcase  + ".rb", "w") 
+df.puts("require " + "'" + @middleware + "/base" + "'")
+df.close
+
+df = File.new(@middleware.downcase + "/lib/" + @middleware.downcase + "/base.rb", "w") 
+
+df.puts("#{@framework}::Env.register do")
+df.puts("  #TODO add needed code to #{@framework} Env")
+df.puts("end")
+
+df.puts("module #{@framework}")
+df.puts("  class \#{@name}")
+df.puts("    include #{@framework}::Middleware ")
+df.puts("    def initialize(app, opts={},params={})")
+df.puts("      @app = app")
+df.puts("      @opts = opts ")
+df.puts("      @params = params")
+df.puts("    end")
+df.puts("    def call(env)")
+df.puts("      #TODO add code here to be executed before calling the next middleware")
+df.puts("      @app.call(env) # run the next middleware")
+df.puts("      #TODO add code here to be executed after calling the next middleware ")
+df.puts("    end")
+df.puts("  end")
+df.puts("end")
+df.close
+eos
+df.close
+
+df = File.new("#{@framework.downcase}/lib/#{@framework.downcase}.rb", "w") 
+df.puts("require '#{@framework.downcase}/base'")
+df.close
+
+df = File.new("#{@framework.downcase}/lib/#{@framework.downcase}/base.rb", "w") 
+df.puts <<-eos
+module #{@framework}
+  module Middleware 
+    include Mushin::Domain::Middleware
+  end
+  module DSL 
+    include Mushin::DSL
+    def self.find activity_context, activity_statment
+      Mushin::DSL.middlewares = []
+      Mushin::DSL.contexts.each do |current_context|
+	if activity_context == current_context.title
+	  current_context.statments.each do |statment|
+	    if activity_statment == statment.title
+	      statment.activations.each do |middleware|
+		Mushin::DSL.middlewares << middleware 
+	      end
+	    end
+	  end
+	end
+      end
+      Mushin::DSL.middlewares
+    end
+  end
+  module Engine
+    extend Mushin::Engine
+    class << self
+      def run domain_context, activity
+	@stack = Mushin::Middleware::Builder.new do
+	(#{@framework}::DSL.find domain_context, activity).each do |middleware|
+	    p "#{@framework} Logging: use " + middleware.name.to_s + " " + middleware.opts.to_s + " " + middleware.params.to_s 
+	    use middleware.name, middleware.opts, middleware.params
+	  end
+	end
+	@setup_middlewares.each do |setup_middleware|
+	  @stack.insert_before 0, setup_middleware 
+	end
+	@stack.call
+      end
+    end
+  end
+  class Env 
+    extend Mushin::Env
+
+    class << self
+      attr_accessor :id
+
+      def get id
+#{@framework}::Persistence::DS.load id.to_s + #{@framework.downcase}
+      end
+
+      def set id, &block 
+	@id = id.to_s + #{@framework.downcase}
+	def on domain_context, &block
+	  @domain_context = domain_context 
+	  @activities = []  
+	  def activity statment 
+	    @activities += [statment]  
+	  end
+	  instance_eval(&block)
+	end
+	instance_eval(&block)
+
+	Dir["./#{@framework.downcase}/*"].each {|file| load file }  
+
+	#{@framework}::Engine.setup [Object.const_get('#{@framework}::Persistence::DS')]
+	@activities.each do |activity| 
+	#{@framework}::Engine.run @domain_context, activity   
+	end
+	return #{@framework}::Persistence::DS.load @id 
+      end
+    end
+  end
+end
+	eos
+	df.close
+
+	df = File.new("#{@framework.downcase}/#{@framework.downcase}.gemspec", "w") 
+	df.puts <<-eos
+# coding: utf-8
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+
+Gem::Specification.new do |spec|
+  spec.name          = "#{@framework.downcase}"
+  spec.version       = "0.0.0.pre1"
+  spec.authors       = ["#{@author}"]
+  spec.email         = ["#{@email}"]
+  spec.summary       = "#{@summary}" 
+  spec.description   = "#{@desc}"
+  spec.homepage      = "#{@website}"
+  spec.license       = "#{@license}"
+
+  spec.files       =  Dir.glob("{lib}/**/*")  
+  spec.require_paths = ["lib"]
+end
+	eos
+	df.close
+
+	# Framework Peristance Gem
+	@ds = @framework.downcase + '-redis'
+	if File.directory?("#{@ds.downcase}")
+	  FileUtils.remove_dir (Dir::pwd + "/#{@ds.downcase}") 
+	end
+	Dir.mkdir(Dir::pwd + "/#{@ds.downcase}") 
+	Dir.mkdir(Dir::pwd + "/#{@ds.downcase}/lib") 
+	Dir.mkdir(Dir::pwd + "/#{@ds.downcase}/lib/#{@ds.downcase}") 
+	Dir.mkdir(Dir::pwd + "/#{@ds.downcase}/spec") 
+
+	df = File.new("#{@ds.downcase}/lib/#{@ds.downcase}.rb", "w") 
+	df.puts("require '#{@ds}/base'")
+	df.close
+
+	df = File.new("#{@ds.downcase}/lib/#{@ds.downcase}/base.rb", "w") 
+	df.puts <<-eos
+require "redis"
+
+module #{@framework} 
+  module Persistence
+    class DS 
+
+	#{@framework}::Env.register do 
+	attr_accessor :id
+      end
+
+      @@redis = Redis.new
+
+      def initialize app
+	@app = app
+	@id = #{@framework}::Env.id
+      end
+
+      def call(env)
+	p "#{@framework}::Persistence::DS instance id = " + @id.to_s 
+	if exists? @id 
+	  env[:#{@framework.downcase}] = DS.load @id 
+	  p 'resotred' + env[:#{@framework.downcase}].to_s
+	else 
+	  p 'new obj from #{@framework}::Env class'
+	  env[:#{@framework.downcase}] = #{@framework}::Env.new
+	  env[:#{@framework.downcase}].id  = @id
+	  p "env[:#{@framework.downcase}].id equals " +  env[:#{@framework.downcase}].id.to_s
+	end
+	@app.call(env)
+	DS.store env[:#{@framework.downcase}] 
+	p "stored " + env[:#{@framework.downcase}].to_s 
+      end
+
+      def DS.store obj
+	begin
+	  @#{@framework.downcase}_env = Marshal.dump obj 
+	  @@redis.set(obj.id, @#{@framework.downcase}_env)
+	ensure
+	  p "storing #{@framework} Env " + obj.to_s
+	end
+      end
+      def DS.load id
+	return Marshal.load (@@redis.get(id))
+      end
+
+      def exists? id
+	if (@@redis.get id) && (Marshal.load @@redis.get id) 
+	  p "#{@framework}::Persistence::DS.exists? true" 
+	  return true
+	else 
+	  p "#{@framework}::Persistence::DS.exists? false" 
+	  return false
+	end
+      end
+    end
+  end
+end
+	eos
+	df.close
+
+	df = File.new("#{@ds.downcase}/#{@ds.downcase}.gemspec", "w") 
+	df.puts <<-eos
+# coding: utf-8
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+
+Gem::Specification.new do |spec|
+  spec.name          = "#{@ds.downcase}"
+  spec.version       = "0.0.0.pre1"
+  spec.authors       = ["#{@author}"]
+  spec.email         = ["#{@email}"]
+  spec.summary       = "#{@ds_summary}" 
+  spec.description   = "#{@ds_desc}"
+  spec.homepage      = "#{@ds_website}"
+  spec.license       = "#{@license}"
+
+  spec.files       =  Dir.glob("{lib}/**/*")  
+  spec.require_paths = ["lib"]
+end
+	eos
+	df.close
+
+when "config"
+  p "generating mushin's config.rb " 
+when "share"
+  @gem = ARGV[0] 
+  require 'find'
+
+  Find.find(Dir.pwd) do |path|
+    if FileTest.directory?(path)
+      if File.basename(path)[0] == ?.
+	Find.prune       # Don't look any further into this directory.
+      else
+	next
+      end
+    else
+      if (File.basename(path).include? "gemspec") && (File.basename(path).include? @gem.downcase) 
+	p  File.basename(path)
+	@path = path
+	`gem build #{@path.downcase}`
+	`gem push #{@path.downcase}`
+      end
+    end
+  end
+  #`gem push #{@ds.downcase}-0.0.0.pre1.gem`
+  #`gem build #{@ds.downcase}/#{@ds.downcase}.gemspec`
+  #`gem push #{@framework.downcase}-0.0.0.pre1.gem`
+  #`gem push #{@ds.downcase}-0.0.0.pre1.gem`
+when "clean"
+  `rm #{@framework.downcase}-0.0.0.pre1.gem`
+  `rm #{@ds.downcase}-0.0.0.pre1.gem`
+else
+  puts "You just making it up! try mushin --help"
+end
