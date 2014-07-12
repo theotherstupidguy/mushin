@@ -123,13 +123,13 @@ df.close
 
 df = File.new(@middleware.downcase + "/lib/" + @middleware.downcase + "/base.rb", "w") 
 
-df.puts("#{@framework}::Env.register do")
+df.puts("#{@framework.capitalize}::Env.register do")
 df.puts("  #TODO add needed code to #{@framework} Env")
 df.puts("end")
 
-df.puts("module #{@framework}")
+df.puts("module #{@framework.capitalize}")
 df.puts("  class \#{@name}")
-df.puts("    include #{@framework}::Middleware ")
+df.puts("    include #{@framework.capitalize}::Middleware ")
 df.puts("    def initialize(app, opts={},params={})")
 df.puts("      @app = app")
 df.puts("      @opts = opts ")
