@@ -36,7 +36,7 @@ when "setup"
   p "generating mushin's setup.rb " 
   @framework = ARGV[0] 
   df = File.new("setup.rb", "w") 
-  df.puts("Mushin[:framework] = '#{@framework}'")
+  df.puts("Mushin[:framework] = '#{@framework.capitalize}'")
   df.puts("Mushin[:author] = ''")
   df.puts("Mushin[:email] = ''")
   df.puts("Mushin[:license] = ''")
