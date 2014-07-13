@@ -2,7 +2,7 @@ require 'rake/testtask'
 require 'rdoc/task'
 
 desc "Run all tests"
-Rake::TestTask.new do |t|
+Rake::TestTask.new :default do |t|
   t.libs = ["lib"]
   t.pattern = "spec/*_spec.rb"
 end
