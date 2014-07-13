@@ -15,6 +15,10 @@ Gem::Specification.new do |s|
   s.homepage    = 'http://mushin-rb.github.io/'
   s.license     = 'MIT'
   s.post_install_message = <<-MESSAGE
-  Mushin is kinda Awesome, please ENJOY!
+
+
+  "Mushin is kinda Awesome, please ENJOY!" 
+  		     ~ theotherstupidguy :)
+
   MESSAGE
 end
