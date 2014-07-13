@@ -87,7 +87,7 @@ require 'fileutils'
 @name = "Points".capitalize 
 @middleware = '#{@framework.downcase}-' + @name.downcase
 
-# Generates a #{@framework} Middleware Gem
+# Generates a #{@framework.capitalize} Middleware Gem
 #
 if File.directory?(@middleware.downcase)
   FileUtils.remove_dir (Dir::pwd + "/" + @middleware.downcase) 
@@ -179,8 +179,8 @@ module #{@framework}
     class << self
       def run domain_context, activity
 	@stack = Mushin::Middleware::Builder.new do
-	(#{@framework}::DSL.find domain_context, activity).each do |middleware|
-	    p "#{@framework} Logging: use " + middleware.name.to_s + " " + middleware.opts.to_s + " " + middleware.params.to_s 
+	(#{@framework.capitalize}::DSL.find domain_context, activity).each do |middleware|
+	    p "#{@framework.capitalize} Logging: use " + middleware.name.to_s + " " + middleware.opts.to_s + " " + middleware.params.to_s 
 	    use middleware.name, middleware.opts, middleware.params
 	  end
 	end
@@ -198,7 +198,7 @@ module #{@framework}
       attr_accessor :id
 
       def get id
-#{@framework}::Persistence::DS.load id.to_s + #{@framework.downcase}
+        #{@framework.capitalize}::Persistence::DS.load id.to_s + #{@framework.downcase}
       end
 
       def set id, &block 
@@ -215,12 +215,12 @@ module #{@framework}
 
 	Dir["./#{@framework.downcase}/*"].each {|file| load file }  
 
-	#{@framework}::Engine.setup [Object.const_get('#{@framework}::Persistence::DS')]
+	#{@framework.capitalize}::Engine.setup [Object.const_get('#{@framework}::Persistence::DS')]
 	@activities.each do |activity| 
-	  #{@framework}::Engine.run @domain_context, activity   
+	  #{@framework.capitalize}::Engine.run @domain_context, activity   
 	end
-	return #{@framework}::Persistence::DS.load @id 
-end
+	return #{@framework.capitalize}::Persistence::DS.load @id 
+      end
     end
   end
 end
