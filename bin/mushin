@@ -152,7 +152,7 @@ df.close
 
 df = File.new("#{@framework.downcase}/lib/#{@framework.downcase}/base.rb", "w") 
 df.puts <<-eos
-module #{@framework}
+module #{@framework.capitalize}
   module Middleware 
     include Mushin::Domain::Middleware
   end
@@ -198,11 +198,11 @@ module #{@framework}
       attr_accessor :id
 
       def get id
-        #{@framework.capitalize}::Persistence::DS.load id.to_s + #{@framework.downcase}
+        #{@framework.capitalize}::Persistence::DS.load id.to_s + "#{@framework.downcase}"
       end
 
       def set id, &block 
-	@id = id.to_s + #{@framework.downcase}
+	@id = id.to_s + "#{@framework.downcase}"
 	def on domain_context, &block
 	  @domain_context = domain_context 
 	  @activities = []  
@@ -215,7 +215,7 @@ module #{@framework}
 
 	Dir["./#{@framework.downcase}/*"].each {|file| load file }  
 
-	#{@framework.capitalize}::Engine.setup [Object.const_get('#{@framework}::Persistence::DS')]
+	#{@framework.capitalize}::Engine.setup [Object.const_get('#{@framework.capitalize}::Persistence::DS')]
 	@activities.each do |activity| 
 	  #{@framework.capitalize}::Engine.run @domain_context, activity   
 	end
