@@ -267,11 +267,11 @@ df = File.new("#{@ds.downcase}/lib/#{@ds.downcase}/base.rb", "w")
 df.puts <<-eos
 require "redis"
 
-module #{@framework} 
+module #{@framework.capitalize} 
   module Persistence
     class DS 
 
-#{@framework}::Env.register do 
+      #{@framework.capitalize}::Env.register do 
 	attr_accessor :id
       end
 
@@ -279,17 +279,17 @@ module #{@framework}
 
       def initialize app
 	@app = app
-	@id = #{@framework}::Env.id
+	@id = #{@framework.capitalize}::Env.id
       end
 
       def call(env)
-	p "#{@framework}::Persistence::DS instance id = " + @id.to_s 
+	p "#{@framework.capitalize}::Persistence::DS instance id = " + @id.to_s 
 	if exists? @id 
 	  env[:#{@framework.downcase}] = DS.load @id 
 	  p 'resotred' + env[:#{@framework.downcase}].to_s
 	else 
-	  p 'new obj from #{@framework}::Env class'
-	  env[:#{@framework.downcase}] = #{@framework}::Env.new
+	  p 'new obj from #{@framework.capitalize}::Env class'
+	  env[:#{@framework.downcase}] = #{@framework.capitalize}::Env.new
 	  env[:#{@framework.downcase}].id  = @id
 	  p "env[:#{@framework.downcase}].id equals " +  env[:#{@framework.downcase}].id.to_s
 	end
@@ -312,10 +312,10 @@ module #{@framework}
 
       def exists? id
 	if (@@redis.get id) && (Marshal.load @@redis.get id) 
-	  p "#{@framework}::Persistence::DS.exists? true" 
+	  p "#{@framework.capitalize}::Persistence::DS.exists? true" 
 	  return true
 	else 
-	  p "#{@framework}::Persistence::DS.exists? false" 
+	  p "#{@framework.capitalize}::Persistence::DS.exists? false" 
 	  return false
 	end
       end
