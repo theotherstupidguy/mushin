@@ -84,7 +84,8 @@ when "roll"
 #!/usr/bin/env ruby
 
 require 'fileutils'
-@name = "Points".capitalize 
+#TODO some input using STDIN.gets.strip to setup the name of the middleware 
+@name = "SomeName".capitalize 
 @middleware = '#{@framework.downcase}-' + @name.downcase
 
 # Generates a #{@framework.capitalize} Middleware Gem
