@@ -1,6 +1,3 @@
-require_relative './middleware/builder'
-require_relative './middleware/runner'
-
 module Mushin # Domain Frameworks Generator
   module Errors  
     exceptions = %w[ UnkownDSLConstruct UnkownActivation UnknownOption ]  
@@ -82,8 +79,10 @@ module Mushin # Domain Frameworks Generator
       def statment statment=[], &block
 	@statment = Mushin::DSL::Statment.new statment 
 	def activation name, opts={}, params={}
-	  @activation = Mushin::DSL::Activation.new name, opts, params
-	  @statment.activations << @activation 
+	  if !@statment.activations.bsearch {|x| x == [name,opts,params]}
+	    @activation = Mushin::DSL::Activation.new name, opts, params
+	    @statment.activations << @activation 
+	  end
 	end
 	yield
 	@context.statments << @statment
@@ -94,6 +93,9 @@ module Mushin # Domain Frameworks Generator
   end
 
   module Engine
+    require_relative './middleware/builder'
+    require_relative './middleware/runner'
+
     attr_accessor :setup_middlewares
     def setup before_stack = [] 
       @setup_middlewares = before_stack

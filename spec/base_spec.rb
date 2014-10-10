@@ -29,7 +29,7 @@ describe Mushin::Middleware, 'provides an extendable functionality to Domain Spe
     #SomeDomainMiddleware::Opts[:option_key] = "option_value"
   end
   it 'enables setting and getting options' do 
-    skip
+    #skip
     #SomeDomainMiddleware::Opts[:option_key].must_equal "option_value" 
   end
 end
@@ -39,7 +39,7 @@ describe Mushin::DSL, 'provides an extendable functionality of DSLs' do
   before do 
     end
   it 'dsl in a dsl book' do 
-  skip
+  #skip
     module Gamebook
       extend Mushin::DSL
       context 'c' do 
