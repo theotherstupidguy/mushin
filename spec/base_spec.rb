@@ -43,16 +43,16 @@ describe Mushin::DSL, 'provides an extendable functionality of DSLs' do
     module Gamebook
       extend Mushin::DSL
       context 'c' do 
-	statment 's' do
-	  activation 'a'
+	activity 's' do
+	  use 'a'
 	end
       end
     end
     module Pentest 
       extend Mushin::DSL
       context 'c' do 
-	statment 's' do
-	  activation 'a'
+	activity 's' do
+	  use 'a'
 	end
       end
     end
@@ -60,6 +60,6 @@ describe Mushin::DSL, 'provides an extendable functionality of DSLs' do
     Mushin::DSL.contexts.must_be_kind_of Array
     Mushin::DSL.contexts[0].must_be_kind_of Mushin::DSL::Context 
     Mushin::DSL.contexts[0].title.must_equal 'c' 
-    Mushin::DSL.contexts[0].statments[0].must_be_kind_of Mushin::DSL::Statment
+    Mushin::DSL.contexts[0].activities[0].must_be_kind_of Mushin::DSL::Activity
   end
 end

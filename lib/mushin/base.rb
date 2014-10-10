@@ -1,6 +1,6 @@
 module Mushin # Domain Frameworks Generator
   module Errors  
-    exceptions = %w[ UnkownDSLConstruct UnkownActivation UnknownOption ]  
+    exceptions = %w[ UnkownDSLConstruct UnkownUse UnknownOption ]  
     exceptions.each { |e| const_set(e, Class.new(StandardError)) }  
   end
 
@@ -48,20 +48,20 @@ module Mushin # Domain Frameworks Generator
 
   module DSL
     class Context
-      attr_accessor :title, :statments
+      attr_accessor :title, :activities
       def initialize title
 	@title = title
-	@statments = []
+	@activities = []
       end
     end
-    class Statment 
-      attr_accessor :title, :activations
+    class Activity 
+      attr_accessor :title, :uses
       def initialize title 
 	@title = title
-	@activations = []
+	@uses = []
       end
     end
-    class Activation 
+    class Use 
       attr_accessor :name, :opts, :params
       def initialize name, opts={}, params={} 
 	@name = name 
@@ -76,16 +76,16 @@ module Mushin # Domain Frameworks Generator
     Mushin::DSL.contexts = []
     def context title, &block
       @context = Mushin::DSL::Context.new title 
-      def statment statment=[], &block
-	@statment = Mushin::DSL::Statment.new statment 
-	def activation name, opts={}, params={}
-	  if !@statment.activations.bsearch {|x| x == [name,opts,params]}
-	    @activation = Mushin::DSL::Activation.new name, opts, params
-	    @statment.activations << @activation 
+      def activity activity=[], &block
+	@activity = Mushin::DSL::Activity.new activity 
+	def use name, opts={}, params={}
+	  if !@activity.uses.bsearch {|x| x == [name,opts,params]}
+	    @use = Mushin::DSL::Use.new name, opts, params
+	    @activity.uses << @use
 	  end
 	end
 	yield
-	@context.statments << @statment
+	@context.activities << @activity
       end
       yield
      Mushin::DSL.contexts << @context
